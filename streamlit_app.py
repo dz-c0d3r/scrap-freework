@@ -215,30 +215,48 @@ def scrape_all_offers(progress_callback=None):
 # ---- STREAMLIT UI ----
 st.title("🕷️ Scraper Free-Work.com – Offres Freelance")
 
-if st.button("Lancer le scraping"):
-    with st.spinner("⏳ Scraping en cours..."):
-        progress_bar = st.progress(0)
-        offers = scrape_all_offers(progress_callback=progress_bar.progress)
-        
-        if offers:
-            json_data = json.dumps(offers, ensure_ascii=False, indent=2)
-            st.success(f"🎉 {len(offers)} offres récupérées avec succès.")
-            st.download_button("📥 Télécharger le JSON", data=json_data, file_name="freework_offres.json", mime="application/json")
-            
-            st.subheader("🧾 Aperçu des premières offres")
-            st.subheader("📢 Messages WhatsApp générés automatiquement")
+# Init session_state
+if "auto_scraped" not in st.session_state:
+    st.session_state.auto_scraped = False
+if "offers" not in st.session_state:
+    st.session_state.offers = []
 
-            for i, offer in enumerate(offers[:5], 1):
-                message = generate_structured_message(offer)
-                st.markdown(f"#### ✉️ Offre {i}")
-                st.code(message)
-                st.subheader(offer["title"])
-                st.write(f"🧾 Contrat : {', '.join(offer['contract_type'])}")
-                st.write(f"📍 Localisation : {offer['localisation']}")
-                st.write(f"📅 Disponibilité : {offer['disponibilite']}")
-                st.write(f"📈 Expérience : {offer['experience']}")
-                st.write(f"💻 Télétravail : {offer['remote']}")
-                st.write(f"🔗 [Voir l’offre]({offer['url']})")
-                st.markdown("---")
-        else:
-            st.error("❌ Aucune offre n’a pu être extraite.")
+# ⚙️ Auto-exécution une seule fois
+if not st.session_state.auto_scraped:
+    with st.spinner("⏳ Scraping automatique au démarrage..."):
+        progress_bar = st.progress(0)
+        st.session_state.offers = scrape_all_offers(progress_callback=progress_bar.progress)
+        st.session_state.auto_scraped = True
+
+# 👆 Bouton manuel (une seule fois)
+if st.button("Lancer le scraping"):
+    with st.spinner("⏳ Scraping manuel..."):
+        progress_bar = st.progress(0)
+        st.session_state.offers = scrape_all_offers(progress_callback=progress_bar.progress)
+
+# Récupération
+offers = st.session_state.offers
+
+# 🔽 Affichage
+if offers:
+    json_data = json.dumps(offers, ensure_ascii=False, indent=2)
+    st.success(f"🎉 {len(offers)} offres récupérées avec succès.")
+    st.download_button("📥 Télécharger le JSON", data=json_data, file_name="freework_offres.json", mime="application/json")
+    
+    st.subheader("🧾 Aperçu des premières offres")
+    st.subheader("📢 Messages WhatsApp générés automatiquement")
+
+    for i, offer in enumerate(offers[:5], 1):
+        message = generate_structured_message(offer)
+        st.markdown(f"#### ✉️ Offre {i}")
+        st.code(message)
+        st.subheader(offer["title"])
+        st.write(f"🧾 Contrat : {', '.join(offer['contract_type'])}")
+        st.write(f"📍 Localisation : {offer['localisation']}")
+        st.write(f"📅 Disponibilité : {offer['disponibilite']}")
+        st.write(f"📈 Expérience : {offer['experience']}")
+        st.write(f"💻 Télétravail : {offer['remote']}")
+        st.write(f"🔗 [Voir l’offre]({offer['url']})")
+        st.markdown("---")
+else:
+    st.error("❌ Aucune offre n’a pu être extraite.")
