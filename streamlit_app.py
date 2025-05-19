@@ -246,9 +246,9 @@ if offers:
     st.subheader("🧾 Aperçu des premières offres")
     st.subheader("📢 Messages WhatsApp générés automatiquement")
 
-    for i, offer in enumerate(offers[:5], 1):
+    for i, offer in enumerate(offers):
         message = generate_structured_message(offer)
-        st.markdown(f"#### ✉️ Offre {i}")
+        st.markdown(f"#### ✉️ Offre {i+1}")
         st.code(message)
         st.subheader(offer["title"])
         st.write(f"🧾 Contrat : {', '.join(offer['contract_type'])}")
